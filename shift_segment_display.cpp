@@ -113,7 +113,6 @@ void ShiftSegmentDisplay::setDisplayValue(unsigned long value, int decimalPointP
    */
   
   /* Critical Section Start */
-  time1 = micros();
   noInterrupts();
   displayValue[3] = numberArray[value % base];
   value = value / base;
@@ -124,7 +123,6 @@ void ShiftSegmentDisplay::setDisplayValue(unsigned long value, int decimalPointP
   displayValue[0] = numberArray[value % base];
   displayValue[3-decimalPointPosition] |= decimalPoint;
   interrupts();
-  time1 = micros() - time1;
   /* Critical Section End */
 }
 
@@ -138,7 +136,6 @@ void ShiftSegmentDisplay::setDisplayValue2(unsigned long value, int decimalPoint
    */
   
   /* Critical Section Start */
-  time2 = micros();
   noInterrupts();
   displayValue[7] = numberArray[value % base];
   value = value / base;
@@ -149,7 +146,6 @@ void ShiftSegmentDisplay::setDisplayValue2(unsigned long value, int decimalPoint
   displayValue[4] = numberArray[value % base];
   displayValue[7-decimalPointPosition] |= decimalPoint;
   interrupts();
-  time2 = micros() - time2;
   /* Critical Section End */
 }
 
