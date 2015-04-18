@@ -26,6 +26,7 @@
 #define TIMERCOUNTLIMIT 240
 #endif
 
+/* This will compute the refresh rate for the entire display. */
 #define REFRESHRATE CLOCKSPEED / DIVIDER / DIGITS / (256 - TIMERCOUNTLIMIT)
 
 /* These variables are used by the ISR and need to be static globals for
@@ -63,9 +64,7 @@ ISR(TIMER2_OVF_vect)
   /* Compute the value needed for shifting. */
   value = digitArray[digit] | (~(displayValue[digit]));
   
-  /* Shift out the first byte which is the number to display. Then shift
-   * out the byte that controls which digit is illuminated. 
-   */
+  /* Shift out the first byte then shift out the second byte. */
   shiftOut(dataPinG, dataClockPinG, MSBFIRST, highByte(value));
   shiftOut(dataPinG, dataClockPinG, MSBFIRST, lowByte(value));
 
@@ -107,7 +106,7 @@ void ShiftSegmentDisplay::setupTimer()
 /* This function turns a number in int format into an array that can
  * be used to drive the 7 segment display.
  */
-void ShiftSegmentDisplay::setDisplayValue(unsigned long value, int decimalPointPosition)
+void ShiftSegmentDisplay::setDisplayValue(unsigned long value, int decimalPointPosition, int base)
 {
   /* When updating the array that contains the display value interrupts are disabled.
    * This helps prevent display glitches.
@@ -116,13 +115,13 @@ void ShiftSegmentDisplay::setDisplayValue(unsigned long value, int decimalPointP
   /* Critical Section Start */
   time1 = micros();
   noInterrupts();
-  displayValue[3] = numberArray[value % 10];
-  value = value / 10;
-  displayValue[2] = numberArray[value % 10];
-  value = value / 10;
-  displayValue[1] = numberArray[value % 10];
-  value = value / 10;
-  displayValue[0] = numberArray[value % 10];
+  displayValue[3] = numberArray[value % base];
+  value = value / base;
+  displayValue[2] = numberArray[value % base];
+  value = value / base;
+  displayValue[1] = numberArray[value % base];
+  value = value / base;
+  displayValue[0] = numberArray[value % base];
   displayValue[3-decimalPointPosition] |= decimalPoint;
   interrupts();
   time1 = micros() - time1;
@@ -132,7 +131,7 @@ void ShiftSegmentDisplay::setDisplayValue(unsigned long value, int decimalPointP
 /* This function turns a number in int format into an array that can
  * be used to drive the 7 segment display.
  */
-void ShiftSegmentDisplay::setDisplayValue2(unsigned long value, int decimalPointPosition)
+void ShiftSegmentDisplay::setDisplayValue2(unsigned long value, int decimalPointPosition, int base)
 {
   /* When updating the array that contains the display value interrupts are disabled.
    * This helps prevent display glitches.
@@ -141,13 +140,13 @@ void ShiftSegmentDisplay::setDisplayValue2(unsigned long value, int decimalPoint
   /* Critical Section Start */
   time2 = micros();
   noInterrupts();
-  displayValue[7] = numberArray[value % 10];
-  value = value / 10;
-  displayValue[6] = numberArray[value % 10];
-  value = value / 10;
-  displayValue[5] = numberArray[value % 10];
-  value = value / 10;
-  displayValue[4] = numberArray[value % 10];
+  displayValue[7] = numberArray[value % base];
+  value = value / base;
+  displayValue[6] = numberArray[value % base];
+  value = value / base;
+  displayValue[5] = numberArray[value % base];
+  value = value / base;
+  displayValue[4] = numberArray[value % base];
   displayValue[7-decimalPointPosition] |= decimalPoint;
   interrupts();
   time2 = micros() - time2;
@@ -159,9 +158,10 @@ void ShiftSegmentDisplay::setDigits(unsigned int digit_1, unsigned int digit_2,
 									unsigned int digit_5, unsigned int digit_6,
 									unsigned int digit_7, unsigned int digit_8)
 {
+	
+	/* These values are active high. These are or'ed with the numberArray. */
 	segmentMask = digit_1 | digit_2 | digit_3 | digit_4 | digit_5 | digit_6 | digit_7 | digit_8;
 	
-	Serial.println(segmentMask,HEX);
 	
 	digitArray[7] = digit_8;
 	digitArray[6] = digit_7;
@@ -179,19 +179,27 @@ void ShiftSegmentDisplay::setSegments(unsigned int seg_A, unsigned int seg_B,
 									  unsigned int seg_E, unsigned int seg_F,
 									  unsigned int seg_G, unsigned int seg_DP)
 {
+	
+	/* These values are active low so they are inverted when or'ed and written out to the shift registers */
 
 	decimalPoint = seg_DP | segmentMask;
 	
-	numberArray[0] = seg_A | seg_B | seg_C | seg_D | seg_E | seg_F |         segmentMask;
-	numberArray[1] =         seg_B | seg_C |                                 segmentMask;
-	numberArray[2] = seg_A | seg_B |         seg_D | seg_E |         seg_G | segmentMask;
-	numberArray[3] = seg_A | seg_B | seg_C | seg_D |                 seg_G | segmentMask;
-	numberArray[4] =         seg_B | seg_C |                 seg_F | seg_G | segmentMask;
-	numberArray[5] = seg_A |         seg_C | seg_D |         seg_F | seg_G | segmentMask;
-	numberArray[6] = seg_A |         seg_C | seg_D | seg_E | seg_F | seg_G | segmentMask;
-	numberArray[7] = seg_A | seg_B | seg_C |                                 segmentMask;
-	numberArray[8] = seg_A | seg_B | seg_C | seg_D | seg_E | seg_F | seg_G | segmentMask;
-	numberArray[9] = seg_A | seg_B | seg_C | seg_D |         seg_F | seg_G | segmentMask;
+	numberArray[0]  = seg_A | seg_B | seg_C | seg_D | seg_E | seg_F |         segmentMask;
+	numberArray[1]  =         seg_B | seg_C |                                 segmentMask;
+	numberArray[2]  = seg_A | seg_B |         seg_D | seg_E |         seg_G | segmentMask;
+	numberArray[3]  = seg_A | seg_B | seg_C | seg_D |                 seg_G | segmentMask;
+	numberArray[4]  =         seg_B | seg_C |                 seg_F | seg_G | segmentMask;
+	numberArray[5]  = seg_A |         seg_C | seg_D |         seg_F | seg_G | segmentMask;
+	numberArray[6]  = seg_A |         seg_C | seg_D | seg_E | seg_F | seg_G | segmentMask;
+	numberArray[7]  = seg_A | seg_B | seg_C |                                 segmentMask;
+	numberArray[8]  = seg_A | seg_B | seg_C | seg_D | seg_E | seg_F | seg_G | segmentMask;
+	numberArray[9]  = seg_A | seg_B | seg_C | seg_D |         seg_F | seg_G | segmentMask;
+	numberArray[10] = seg_A	| seg_B | seg_C |         seg_E | seg_F | seg_G | segmentMask;
+	numberArray[11] =				  seg_C | seg_D | seg_E | seg_F | seg_G | segmentMask;
+	numberArray[12] =						  seg_D | seg_E |         seg_G | segmentMask;
+	numberArray[13] =         seg_B | seg_C | seg_D | seg_E |         seg_G | segmentMask;
+	numberArray[14] = seg_A |                 seg_D | seg_E | seg_F | seg_G | segmentMask;
+	numberArray[15] = seg_A |                         seg_E | seg_F | seg_G | segmentMask;
 
 }
 
@@ -211,31 +219,11 @@ ShiftSegmentDisplay::ShiftSegmentDisplay(int dataClockPin, int dataPin, int latc
   pinMode(latchClockPinG, OUTPUT);
   pinMode(dataPinG      , OUTPUT);  
   
-  decimalPoint = SEGMENT_DP | SEGMENT_MASK;
-
-  /* These values are active low so they are inverted when or'ed and written out to the shift registers */
-  
-  numberArray[0] = SEGMENT_A | SEGMENT_B | SEGMENT_C | SEGMENT_D | SEGMENT_E | SEGMENT_F |             SEGMENT_MASK;
-  numberArray[1] =             SEGMENT_B | SEGMENT_C |                                                 SEGMENT_MASK;
-  numberArray[2] = SEGMENT_A | SEGMENT_B |             SEGMENT_D | SEGMENT_E |             SEGMENT_G | SEGMENT_MASK;
-  numberArray[3] = SEGMENT_A | SEGMENT_B | SEGMENT_C | SEGMENT_D |                         SEGMENT_G | SEGMENT_MASK;
-  numberArray[4] =             SEGMENT_B | SEGMENT_C |                         SEGMENT_F | SEGMENT_G | SEGMENT_MASK;
-  numberArray[5] = SEGMENT_A |             SEGMENT_C | SEGMENT_D |             SEGMENT_F | SEGMENT_G | SEGMENT_MASK;
-  numberArray[6] = SEGMENT_A |             SEGMENT_C | SEGMENT_D | SEGMENT_E | SEGMENT_F | SEGMENT_G | SEGMENT_MASK;
-  numberArray[7] = SEGMENT_A | SEGMENT_B | SEGMENT_C |                                                 SEGMENT_MASK;
-  numberArray[8] = SEGMENT_A | SEGMENT_B | SEGMENT_C | SEGMENT_D | SEGMENT_E | SEGMENT_F | SEGMENT_G | SEGMENT_MASK;
-  numberArray[9] = SEGMENT_A | SEGMENT_B | SEGMENT_C | SEGMENT_D |             SEGMENT_F | SEGMENT_G | SEGMENT_MASK;
-
-  /* These values are active high. These are or'ed with the numberArray. */
-  
-  digitArray[7] = DIGIT_8;
-  digitArray[6] = DIGIT_7;
-  digitArray[5] = DIGIT_6;
-  digitArray[4] = DIGIT_5;
-  digitArray[3] = DIGIT_4;
-  digitArray[2] = DIGIT_3;
-  digitArray[1] = DIGIT_2;
-  digitArray[0] = DIGIT_1;
+  setDigits(DIGIT_1, DIGIT_2, DIGIT_3, DIGIT_4,	
+			DIGIT_5, DIGIT_6, DIGIT_7, DIGIT_8);
+	
+  setSegments(SEGMENT_A, SEGMENT_B, SEGMENT_C, SEGMENT_D,
+			  SEGMENT_E, SEGMENT_F, SEGMENT_G, SEGMENT_DP);
 
   displayValue[0] = 0;
   displayValue[1] = 0;

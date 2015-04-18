@@ -18,8 +18,6 @@
 
 /* 15 14 13 12 | 11 10 9 8 | 7 6 5 4 | 3 2 1 0 */
 
-#ifndef SEGMENTS_DIGITS
-#define SEGMENTS_DIGITS
 #define SEGMENT_A  0x0004
 #define SEGMENT_B  0x0020
 #define SEGMENT_C  0x0001
@@ -39,10 +37,6 @@
 #define DIGIT_6 0x4000
 #define DIGIT_7 0x0800
 #define DIGIT_8 0x0200
-#else
 
-#endif
-
-#define SEGMENT_MASK DIGIT_1 | DIGIT_2 | DIGIT_3 | DIGIT_4 | DIGIT_5 | DIGIT_6 | DIGIT_7 | DIGIT_8 // Or of all the digits
 
 #endif

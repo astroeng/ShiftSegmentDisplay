@@ -12,6 +12,27 @@
 #ifndef SHIFT_SEGMENT_DISPLAY_H
 #define SHIFT_SEGMENT_DISPLAY_H
 
+/* This class is intended to be used with two 74595 shift registers connected in series.
+ * The 16 outputs from those shift registers should be connected to two four digit seven
+ * segment displays. The shift register farthest from the arduino on the serial chain is
+ * the HIGH byte and the closest is the LOW byte. Each of the digits on the displays is 
+ * scanned onto the display creating the illusion of a static display. This must be done
+ * fairly quickly about 40hz or faster to prevent the user from seeing flicker.
+ */
+
+ /* There are a couple of ways to use this class. You may either modify the values in 
+  * shift_segment_param.h to meet your hardware configuration, or define the values for
+  * each connection and pass them into the setDigits and setSegments functions. ALWAYS
+  * call setDigits first! This is due to the need to compute a mask value that is
+  * applied to the segment values when populating the segment array. The definitions in
+  * shift_segment_param are a great example. Each high bit represents the position that
+  * a particular element is connected.
+  */
+
+ /* If you wish to change how a number is drawn you will need to update the table in the
+  * setSegments function. This class does support HEX values but the displayed characters
+  * are pretty archaic.
+  */
 
 class ShiftSegmentDisplay
 {
@@ -25,17 +46,16 @@ class ShiftSegmentDisplay
 	void setSegments(unsigned int seg_A,unsigned int seg_B,unsigned int seg_C,unsigned int seg_D,
 				     unsigned int seg_E,unsigned int seg_F,unsigned int seg_G,unsigned int seg_DP);
 	
-    void setDisplayValue(unsigned long value, int decimalPointPosition);
-    void setDisplayValue2(unsigned long value, int decimalPointPosition);
+    void setDisplayValue(unsigned long value, int decimalPointPosition=0, int base=10);
+    void setDisplayValue2(unsigned long value, int decimalPointPosition=0, int base=10);
     
     int getRefreshRate();
-	unsigned long time1;
-	unsigned long time2;
+
   private:
 	void setupTimer();
     unsigned int decimalPoint;
 	unsigned int segmentMask;
-    unsigned int numberArray[10];
+    unsigned int numberArray[16];
 	
 
 };
