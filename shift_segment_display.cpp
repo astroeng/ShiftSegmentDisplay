@@ -22,9 +22,9 @@
 #define CLOCKSPEED 16000000
 #define DIVIDER 1024
 
-#ifndef TIMERCOUNTLIMIT
+/* Larger numbers here quicken the refresh rate. Smaller numbers slow the refresh rate. 
+ */
 #define TIMERCOUNTLIMIT 240
-#endif
 
 /* This will compute the refresh rate for the entire display. */
 #define REFRESHRATE CLOCKSPEED / DIVIDER / DIGITS / (256 - TIMERCOUNTLIMIT)
@@ -78,7 +78,7 @@ ISR(TIMER2_OVF_vect)
 
 };
 
-/* This frinction is used to setup timer 2 which is the source of the
+/* This function is used to setup timer2 which is the source of the
  * interrupt that is refreshing the 7 segment display.
  */
 void ShiftSegmentDisplay::setupTimer()
@@ -105,6 +105,7 @@ void ShiftSegmentDisplay::setupTimer()
 
 /* This function turns a number in int format into an array that can
  * be used to drive the 7 segment display.
+ * Signed values are not supported.
  */
 void ShiftSegmentDisplay::setDisplayValue(unsigned long value, int decimalPointPosition, int base)
 {
@@ -128,6 +129,7 @@ void ShiftSegmentDisplay::setDisplayValue(unsigned long value, int decimalPointP
 
 /* This function turns a number in int format into an array that can
  * be used to drive the 7 segment display.
+ * Signed values are not supported.
  */
 void ShiftSegmentDisplay::setDisplayValue2(unsigned long value, int decimalPointPosition, int base)
 {
@@ -150,14 +152,18 @@ void ShiftSegmentDisplay::setDisplayValue2(unsigned long value, int decimalPoint
 }
 
 void ShiftSegmentDisplay::setDigits(unsigned int digit_1, unsigned int digit_2,
-									unsigned int digit_3, unsigned int digit_4,
-									unsigned int digit_5, unsigned int digit_6,
-									unsigned int digit_7, unsigned int digit_8)
+                                    unsigned int digit_3, unsigned int digit_4,
+                                    unsigned int digit_5, unsigned int digit_6,
+                                    unsigned int digit_7, unsigned int digit_8)
 {
 	
 	/* These values are active high. These are or'ed with the numberArray. */
 	segmentMask = digit_1 | digit_2 | digit_3 | digit_4 | digit_5 | digit_6 | digit_7 | digit_8;
 	
+	/* On my design one display is above the other display forming two rows.
+	 * Digits 8 - 5 is the upper display left to right
+	 * Digits 4 - 1 is the lower display left to right
+	 */
 	
 	digitArray[7] = digit_8;
 	digitArray[6] = digit_7;
@@ -171,12 +177,24 @@ void ShiftSegmentDisplay::setDigits(unsigned int digit_1, unsigned int digit_2,
 }
 
 void ShiftSegmentDisplay::setSegments(unsigned int seg_A, unsigned int seg_B,
-									  unsigned int seg_C, unsigned int seg_D,
-									  unsigned int seg_E, unsigned int seg_F,
-									  unsigned int seg_G, unsigned int seg_DP)
+                                      unsigned int seg_C, unsigned int seg_D,
+                                      unsigned int seg_E, unsigned int seg_F,
+                                      unsigned int seg_G, unsigned int seg_DP)
 {
+	/* The basic layout for a single 7 segment display is:
+	 
+	  A      -
+	F   B   | |
+	  G      -
+	E   C   | |
+	  D  DP  - .
 	
-	/* These values are active low so they are inverted when or'ed and written out to the shift registers */
+	 */
+	
+	/* Here is defined which segments are enabled for a given numeric digit to be drawn.
+	 * These values are active low so they are inverted when or'ed to the active digit 
+	 * and then written out to the shift registers
+	 */
 
 	decimalPoint = seg_DP | segmentMask;
 	
@@ -190,9 +208,9 @@ void ShiftSegmentDisplay::setSegments(unsigned int seg_A, unsigned int seg_B,
 	numberArray[7]  = seg_A | seg_B | seg_C |                                 segmentMask;
 	numberArray[8]  = seg_A | seg_B | seg_C | seg_D | seg_E | seg_F | seg_G | segmentMask;
 	numberArray[9]  = seg_A | seg_B | seg_C | seg_D |         seg_F | seg_G | segmentMask;
-	numberArray[10] = seg_A	| seg_B | seg_C |         seg_E | seg_F | seg_G | segmentMask;
-	numberArray[11] =				  seg_C | seg_D | seg_E | seg_F | seg_G | segmentMask;
-	numberArray[12] =						  seg_D | seg_E |         seg_G | segmentMask;
+	numberArray[10] = seg_A | seg_B | seg_C |         seg_E | seg_F | seg_G | segmentMask;
+	numberArray[11] =                 seg_C | seg_D | seg_E | seg_F | seg_G | segmentMask;
+	numberArray[12] =                         seg_D | seg_E |         seg_G | segmentMask;
 	numberArray[13] =         seg_B | seg_C | seg_D | seg_E |         seg_G | segmentMask;
 	numberArray[14] = seg_A |                 seg_D | seg_E | seg_F | seg_G | segmentMask;
 	numberArray[15] = seg_A |                         seg_E | seg_F | seg_G | segmentMask;
@@ -216,10 +234,10 @@ ShiftSegmentDisplay::ShiftSegmentDisplay(int dataClockPin, int dataPin, int latc
   pinMode(dataPinG      , OUTPUT);  
   
   setDigits(DIGIT_1, DIGIT_2, DIGIT_3, DIGIT_4,	
-			DIGIT_5, DIGIT_6, DIGIT_7, DIGIT_8);
+            DIGIT_5, DIGIT_6, DIGIT_7, DIGIT_8);
 	
   setSegments(SEGMENT_A, SEGMENT_B, SEGMENT_C, SEGMENT_D,
-			  SEGMENT_E, SEGMENT_F, SEGMENT_G, SEGMENT_DP);
+              SEGMENT_E, SEGMENT_F, SEGMENT_G, SEGMENT_DP);
 
   displayValue[0] = 0;
   displayValue[1] = 0;

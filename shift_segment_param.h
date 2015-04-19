@@ -12,8 +12,9 @@
 #ifndef SHIFT_SEGMENT_PARAM_H
 #define SHIFT_SEGMENT_PARAM_H
 
-/* These define statements allow the code to be easily changed if the wiring to the
- * display were to ever change. This supports a maximum of 8 digits, two displays.
+/* These define statements allow the code to be easily changed if the wiring from
+ * the shift registers to the displays were to ever change. This supports a maximum
+ * of 8 digits, two displays.
  */
 
 /* 15 14 13 12 | 11 10 9 8 | 7 6 5 4 | 3 2 1 0 */
