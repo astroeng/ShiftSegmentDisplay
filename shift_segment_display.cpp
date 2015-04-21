@@ -182,13 +182,13 @@ void ShiftSegmentDisplay::setSegments(unsigned int seg_A, unsigned int seg_B,
                                       unsigned int seg_G, unsigned int seg_DP)
 {
 	/* The basic layout for a single 7 segment display is:
-	 
-	  A      -
-	F   B   | |
-	  G      -
-	E   C   | |
-	  D  DP  - .
-	
+	 *
+	 *   A      -
+	 * F   B   | |
+	 *   G      -
+	 * E   C   | |
+	 *   D  DP  - .
+	 *
 	 */
 	
 	/* Here is defined which segments are enabled for a given numeric digit to be drawn.
