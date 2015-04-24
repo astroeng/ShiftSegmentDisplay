@@ -40,7 +40,7 @@ The user may also define:
 
 To create an instance of the display library include the library and declare an object of it in your Arduino sketch in a global scope. More than one may not be declared since there is a hardware dependency on timer2.
 
-```#include <shift_segment_display.h>```
+```#include <shift_segment_display.h>```  
 ```ShiftSegmentDisplay display;```
 
 Then inside the setup or possibly the loop function call the constructor with the pin assignments.
