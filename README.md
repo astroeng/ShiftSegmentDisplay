@@ -12,9 +12,9 @@ Copy the project directory to the library folder in the Arduino working director
 
 The library uses timer2 to control the refresh rate of the displays.
 
-Each of the bits sent to the shift registers represents a connection to the displays. The library expects the user to define a symbol for each segment and digit on the display.
+Each of the bits sent to the shift registers represents a connection to the displays. The library expects the user to define a symbol for each segment and digit on the display. Each high bit represents the connection from the shift register to the display.
 
-The following is an example of what needs to be defined in the user code. Each high bit represents the connection from the shift register to the display:
+The following is an example of what needs to be defined in the user code:
 
 ```#define DIGIT_1 0x0001```  
 ```#define DIGIT_2 0x0002```  
@@ -37,3 +37,12 @@ The following is an example of what needs to be defined in the user code. Each h
 The user may also define:
 
 ```#define DIGITS 8  /* Pick a number 8 or less */```
+
+To create an instance of the display library include the library and declare an object of it in your Arduino sketch in a global scope. More than one may not be declared since there is a hardware dependency on timer2.
+
+```#include <shift_segment_display.h>```
+```ShiftSegmentDisplay display;```
+
+Then inside the setup or possibly the loop function call the constructor with the pin assignments.
+
+```display = ShiftSegmentDisplay(5, 6, 7); /* 5,6,7 should be setup as Arduino output pins. */```
